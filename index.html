@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>母亲节快乐</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #ffeef8 100%);
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            text-align: center;
+            overflow-x: hidden;
+            position: relative;
+            overflow-y: auto;
+        }
+        
+        /* 响应式布局 - 移动端适配 */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+                margin: 30px 0;
+            }
+            
+            .message {
+                padding: 15px;
+                margin: 15px 0;
+            }
+            
+            p {
+                font-size: 1rem;
+                line-height: 1.6;
+            }
+            
+            .container {
+                padding: 15px;
+            }
+            
+            .photo-container {
+                width: 90%;
+                height: 180px;
+            }
+            
+            .button {
+                padding: 10px 20px;
+                font-size: 1rem;
+            }
+            
+            .music-control {
+                width: 35px;
+                height: 35px;
+                bottom: 15px;
+                right: 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8rem;
+                margin: 20px 0;
+            }
+            
+            .message {
+                padding: 10px;
+            }
+            
+            .photo-container {
+                height: 150px;
+            }
+        }
+        
+        /* 阶段显示控制 - 滑动切换效果 */
+        .stage {
+            display: none;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            transition: transform 0.5s ease, opacity 0.5s ease;
+            opacity: 0;
+            transform: translateX(100%);
+        }
+        
+        #stage1, #stage3 {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .stage.active {
+            display: block;
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .stage.prev {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+        
+        .stage.next {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        
+        /* 滚动显示元素的基础样式 */
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+        
+        .scroll-reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20"><path d="M10,3.22 L9.08,5.06 L6.47,5.47 L8.23,7.18 L7.76,9.78 L10,8.56 L12.24,9.78 L11.77,7.18 L13.53,5.47 L10.92,5.06 L10,3.22 Z" fill="%23ffd1dc" opacity="0.2"/></svg>');
+            opacity: 0.2;
+            z-index: -2;
+            pointer-events: none;
+        }
+        
+        .container {
+            max-width: 90%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        h1 {
+            color: #e91e63;
+            font-size: 3rem;
+            margin: 50px 0;
+            text-shadow: 0 2px 5px rgba(233, 30, 99, 0.3);
+            position: relative;
+            z-index: 10;
+            animation: fadeIn 2s ease-in-out;
+        }
+        
+        .message {
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            animation: slideUp 1.5s ease-in-out;
+        }
+        
+        p {
+            line-height: 1.8;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+        
+        .heart {
+            color: #e91e63;
+            font-size: 1.5em;
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .floating-hearts {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .floating-heart {
+            position: absolute;
+            color: #e91e63;
+            font-size: 1.2rem;
+            opacity: 0.6;
+            animation: floatingHeart linear infinite;
+        }
+        
+        @keyframes floatingHeart {
+            0% {
+                transform: translate(0, 0) rotate(0deg);
+                opacity: 0;
+            }
+            25% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: translate(var(--translate-x), 100vh) rotate(var(--rotate-deg));
+                opacity: 0;
+            }
+        }
+        
+        .music-control {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .music-control:hover {
+            transform: scale(1.1);
+        }
+        
+        .flowers {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .flower {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23e91e63"><path d="M12,2C13.1,2 14,2.9 14,4C14,5.1 13.1,6 12,6C10.9,6 10,5.1 10,4C10,2.9 10.9,2 12,2M15.5,8C16.3,8 17,8.7 17,9.5C17,10.3 16.3,11 15.5,11C14.7,11 14,10.3 14,9.5C14,8.7 14.7,8 15.5,8M8.5,8C9.3,8 10,8.7 10,9.5C10,10.3 9.3,11 8.5,11C7.7,11 7,10.3 7,9.5C7,8.7 7.7,8 8.5,8M12,11C13.1,11 14,11.9 14,13C14,14.1 13.1,15 12,15C10.9,15 10,14.1 10,13C10,11.9 10.9,11 12,11M19,17V19H5V17C5,14.8 8.1,13 12,13C15.9,13 19,14.8 19,17Z" /></svg>');
+            background-size: contain;
+            opacity: 0.7;
+            animation: falling linear infinite;
+        }
+        
+        .photo-container {
+            width: 80%;
+            max-width: 300px;
+            height: 200px;
+            position: relative;
+            margin: 20px auto;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .photo {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            border-radius: 15px;
+        }
+        
+        .photo.active {
+            opacity: 1;
+        }
+        
+        .photo-nav {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        .photo-nav-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: rgba(233, 30, 99, 0.3);
+            margin: 0 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .photo-nav-dot.active {
+            background-color: #e91e63;
+            transform: scale(1.2);
+        }
+        
+        .button {
+            background-color: #e91e63;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(233, 30, 99, 0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        .button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(233, 30, 99, 0.5);
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes falling {
+            0% {
+                transform: translate(0, -20px) rotate(0deg);
+                opacity: 0;
+            }
+            50% {
+                opacity: 0.7;
+            }
+            100% {
+                transform: translate(var(--translate-x, 20px), 100vh) rotate(var(--rotate-deg, 360deg));
+                opacity: 0;
+            }
+        }
+        
+        .message p {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .message p:hover {
+            transform: scale(1.05);
+            color: #e91e63;
+        }
+        
+        .wishes-container {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            margin: 0 auto;
+            width: 90%;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .wishes-container.show {
+            max-height: 500px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        
+        /* 祝福文字的渐进式显示 */
+        .wishes-container p {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        
+        .wishes-container p.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* 打字机效果 */
+        .typing-text {
+            overflow: hidden;
+            border-right: .15em solid #e91e63;
+            white-space: nowrap;
+            margin: 0 auto;
+            letter-spacing: .1em;
+            animation: typing 3.5s steps(40, end), blink-caret .75s step-end infinite;
+        }
+        
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #e91e63 }
+        }
+        
+        /* 烟花效果 */
+        .firework {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            box-shadow: 0 0 10px 2px rgba(233, 30, 99, 0.8);
+            animation: explode 1s ease-out forwards;
+            opacity: 0;
+        }
+        
+        @keyframes explode {
+            0% {
+                transform: scale(0.1);
+                opacity: 0;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+        
+        .final-message {
+            font-size: 4rem;
+            color: #e91e63;
+            font-weight: bold;
+            margin: 100px 0;
+            text-align: center;
+            text-shadow: 0 2px 10px rgba(233, 30, 99, 0.5);
+            position: relative;
+            z-index: 10;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 1s ease;
+        }
+        
+        .final-message.active {
+            opacity: 1;
+            transform: scale(1);
+        }
+    </style>
+</head>
+<body>
+    <div class="flowers" id="flowers"></div>
+    <div class="floating-hearts" id="floating-hearts"></div>
+    
+    <div class="container">
+        <!-- 第一阶段：只显示标题 -->
+        <div id="stage1" class="stage active">
+            <h1 class="animate__animated animate__heartBeat scroll-reveal">母亲节快乐 <span class="heart">❤</span></h1>
+            <button class="button animate__animated animate__pulse scroll-reveal">点击查看信件</button>
+        </div>
+        
+        <!-- 第二阶段：显示信件内容 -->
+        <div id="stage2" class="stage">     
+        <div class="message scroll-reveal">
+            <p class="typing-text">亲爱的妈妈：</p>
+            <p class="scroll-reveal letter-text">在这特别的日子里，我想对您说声谢谢。</p>
+            <p class="scroll-reveal letter-text">谢谢您的无私奉献，谢谢您的包容理解，</p>
+            <p class="scroll-reveal letter-text">谢谢您教会我如何坚强，如何去爱。</p>
+            <p class="scroll-reveal letter-text">您的爱是我生命中最温暖的阳光，</p>
+            <p class="scroll-reveal letter-text">您的笑容是我前进路上最美的风景。</p>
+            <p class="scroll-reveal letter-text">祝您母亲节快乐，健康幸福！</p>
+            <p class="scroll-reveal letter-text">永远爱您！</p>
+        </div>
+        
+         <!-- 第三阶段：显示照片和祝福 -->
+        <div class="photo-container scroll-reveal">
+            <img src="https://9e5b8973.tuchuang-c9c.pages.dev/屏幕截图 2024-11-12 164807.png" alt="妈妈的照片" class="photo active" id="photo1">
+        </div>
+        
+        <button class="button animate__animated animate__pulse scroll-reveal" id="wishButton">点击查看特别祝福</button>
+        
+        
+        </div>
+        
+        <!-- 第三阶段：显示最终祝福和烟花 -->
+        <div id="stage3" class="stage">
+            <div id="fireworks-container"></div>
+            <div class="final-message" id="final-message">爱你老妈 ❤</div>
+        </div>
+    </div>
+    
+    <div class="music-control" id="music-control">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#e91e63"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+    </div>
+    
+   
+    <script>
+        // 滑动切换相关变量
+        let touchStartX = 0;
+        let touchEndX = 0;
+        let currentStage = 1;
+        let reversedDirection = true; // 添加反向滑动标志
+        const totalStages = 3;
+        
+        // 创建花朵动画
+        function createFlowers() {
+            const flowersContainer = document.getElementById('flowers');
+            const flowerCount = 20;
+            
+            for (let i = 0; i < flowerCount; i++) {
+                const flower = document.createElement('div');
+                flower.classList.add('flower');
+                
+                // 随机位置
+                const left = Math.random() * 100;
+                flower.style.left = `${left}%`;
+                
+                // 随机大小
+                const size = Math.random() * 15 + 10;
+                flower.style.width = `${size}px`;
+                flower.style.height = `${size}px`;
+                
+                // 随机动画持续时间
+                const duration = Math.random() * 10 + 5;
+                flower.style.animationDuration = `${duration}s`;
+                
+                // 随机延迟
+                const delay = Math.random() * 5;
+                flower.style.animationDelay = `${delay}s`;
+                
+                // 随机移动方向
+                const translateX = Math.random() * 50 - 25;
+                flower.style.setProperty('--translate-x', `${translateX}px`);
+                
+                // 随机旋转角度
+                const rotateDeg = Math.random() * 720 - 360;
+                flower.style.setProperty('--rotate-deg', `${rotateDeg}deg`);
+                
+                flowersContainer.appendChild(flower);
+            }
+        }
+        
+        // 创建浮动心形
+        function createFloatingHearts() {
+            const heartsContainer = document.getElementById('floating-hearts');
+            const heartCount = 15;
+            
+            for (let i = 0; i < heartCount; i++) {
+                const heart = document.createElement('div');
+                heart.classList.add('floating-heart');
+                heart.innerHTML = '❤';
+                
+                // 随机位置
+                const left = Math.random() * 100;
+                heart.style.left = `${left}%`;
+                
+                // 随机大小
+                const size = Math.random() * 1 + 0.8;
+                heart.style.fontSize = `${size}rem`;
+                
+                // 随机动画持续时间
+                const duration = Math.random() * 15 + 10;
+                heart.style.animationDuration = `${duration}s`;
+                
+                // 随机延迟
+                const delay = Math.random() * 8;
+                heart.style.animationDelay = `${delay}s`;
+                
+                // 随机移动方向
+                const translateX = Math.random() * 100 - 50;
+                heart.style.setProperty('--translate-x', `${translateX}px`);
+                
+                // 随机旋转角度
+                const rotateDeg = Math.random() * 360;
+                heart.style.setProperty('--rotate-deg', `${rotateDeg}deg`);
+                
+                heartsContainer.appendChild(heart);
+            }
+        }
+        
+        // 照片轮播
+        function setupPhotoSlider() {
+            const photos = document.querySelectorAll('.photo');
+            const dots = document.querySelectorAll('.photo-nav-dot');
+            let currentIndex = 0;
+            
+            function showPhoto(index) {
+                photos.forEach(photo => photo.classList.remove('active'));
+                dots.forEach(dot => dot.classList.remove('active'));
+                
+                photos[index].classList.add('active');
+                dots[index].classList.add('active');
+                currentIndex = index;
+            }
+            
+            // 点击导航点切换照片
+            dots.forEach((dot, index) => {
+                dot.addEventListener('click', () => showPhoto(index));
+            });
+            
+            // 自动轮播
+            setInterval(() => {
+                let nextIndex = (currentIndex + 1) % photos.length;
+                showPhoto(nextIndex);
+            }, 3000);
+        }
+        
+        // 背景音乐控制
+        function setupMusicControl() {
+            const musicControl = document.getElementById('music-control');
+            const bgMusic = document.getElementById('bgMusic');
+            let isPlaying = false;
+            
+            musicControl.addEventListener('click', function() {
+                if (isPlaying) {
+                    bgMusic.pause();
+                    musicControl.style.opacity = '0.5';
+                } else {
+                    bgMusic.play().catch(e => console.log('无法自动播放音乐:', e));
+                    musicControl.style.opacity = '1';
+                }
+                isPlaying = !isPlaying;
+            });
+            
+            // 尝试在用户交互后播放音乐
+            document.addEventListener('click', function() {
+                if (!isPlaying) {
+                    bgMusic.play().catch(e => console.log('无法自动播放音乐:', e));
+                    musicControl.style.opacity = '1';
+                    isPlaying = true;
+                }
+            }, {once: true});
+        }
+        
+        // 特别祝福按钮点击事件 - 已在阶段切换逻辑中实现
+        function setupWishButton() {
+            // 事件监听已在setupStageTransition中实现
+            // 这里保留函数以保持代码结构一致性
+        }
+        
+        // 滚动显示元素
+        function handleScrollReveal() {
+            const scrollRevealElements = document.querySelectorAll('.scroll-reveal');
+            
+            scrollRevealElements.forEach(element => {
+                const elementTop = element.getBoundingClientRect().top;
+                const elementVisible = 150; // 元素显示的触发距离
+                
+                if (elementTop < window.innerHeight - elementVisible) {
+                    element.classList.add('active');
+                }
+            });
+        }
+        
+        // 创建烟花效果
+        function createFireworks() {
+            const fireworksContainer = document.getElementById('fireworks-container');
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            
+            // 清空之前的烟花
+            fireworksContainer.innerHTML = '';
+            
+            // 创建多个烟花
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const firework = document.createElement('div');
+                    firework.classList.add('firework');
+                    
+                    // 随机位置
+                    const left = Math.random() * screenWidth;
+                    const top = Math.random() * screenHeight * 0.7;
+                    firework.style.left = `${left}px`;
+                    firework.style.top = `${top}px`;
+                    
+                    // 随机颜色
+                    const colors = ['#e91e63', '#ff4081', '#f06292', '#ec407a', '#d81b60'];
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    firework.style.backgroundColor = color;
+                    firework.style.boxShadow = `0 0 10px 2px ${color}`;
+                    
+                    // 随机大小
+                    const size = Math.random() * 8 + 4;
+                    firework.style.width = `${size}px`;
+                    firework.style.height = `${size}px`;
+                    
+                    fireworksContainer.appendChild(firework);
+                    
+                    // 移除烟花元素
+                    setTimeout(() => {
+                        firework.remove();
+                    }, 1000);
+                }, i * 100);
+            }
+        }
+        
+        // 显示文字逐个出现效果
+        function showLetterSequentially() {
+            const letterTexts = document.querySelectorAll('.letter-text');
+            letterTexts.forEach((text, index) => {
+                setTimeout(() => {
+                    text.classList.add('active');
+                }, 500 * (index + 1));
+            });
+        }
+        
+        // 阶段切换控制
+        function setupStageTransition() {
+            // 触摸事件处理滑动切换
+            document.addEventListener('touchstart', function(e) {
+                touchStartX = e.changedTouches[0].screenX;
+            }, false);
+            
+            document.addEventListener('touchend', function(e) {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            }, false);
+            
+            function handleSwipe() {
+                const threshold = 50; // 滑动阈值
+                
+                // 向右滑动 - 上一页
+                if (reversedDirection ? touchEndX - touchStartX > threshold : touchStartX - touchEndX > threshold && currentStage > 1) {
+                    changeStage(currentStage - 1);
+                } 
+                // 向左滑动 - 下一页
+                else if (reversedDirection ? touchStartX - touchEndX > threshold : touchEndX - touchStartX > threshold && currentStage < totalStages) {
+                    changeStage(currentStage + 1);
+                }
+            }
+            
+            function changeStage(newStage) {
+                const currentElement = document.getElementById('stage' + currentStage);
+                const newElement = document.getElementById('stage' + newStage);
+                
+                // 添加过渡类
+                if (newStage > currentStage) {
+                    newElement.classList.add('next');
+                } else {
+                    newElement.classList.add('prev');
+                }
+                
+                // 显示新阶段
+                setTimeout(() => {
+                    currentElement.classList.remove('active');
+                    newElement.classList.remove('prev', 'next');
+                    newElement.classList.add('active');
+                    currentStage = newStage;
+                }, 10);
+            }
+            
+            // 点击第一阶段进入第二阶段
+            document.getElementById('stage1').addEventListener('click', function() {
+                // 切换阶段
+                document.getElementById('stage1').classList.remove('active');
+                document.getElementById('stage2').classList.add('active');
+                currentStage = 2;
+                
+                // 显示信件内容，缓缓出现效果
+                showLetterSequentially();
+                
+                // 激活所有滚动显示元素
+                setTimeout(() => {
+                    const scrollElements = document.querySelectorAll('#stage2 .scroll-reveal');
+                    scrollElements.forEach((element, index) => {
+                        setTimeout(() => {
+                            element.classList.add('active');
+                        }, 300 * index);
+                    });
+                }, 500);
+            });
+            
+            // 点击第二阶段进入第三阶段
+            document.getElementById('stage2').addEventListener('click', function() {
+                // 切换阶段
+                document.getElementById('stage2').classList.remove('active');
+                document.getElementById('stage3').classList.add('active');
+                currentStage = 3;
+                
+                // 显示最终祝福
+                setTimeout(() => {
+                    document.getElementById('final-message').classList.add('active');
+                }, 500);
+                
+                // 创建烟花效果
+                createFireworks();
+                
+                // 每隔几秒创建一批新烟花
+                setInterval(createFireworks, 3000);
+            });
+            
+            // 为特殊祝福按钮添加点击事件，显示特殊祝福
+            document.getElementById('wishButton').addEventListener('click', function() {
+                const wishesContainer = document.getElementById('wishes-container');
+                wishesContainer.classList.toggle('show');
+                
+                if (wishesContainer.classList.contains('show')) {
+                    this.textContent = '收起祝福';
+                    // 创建更多花朵和心形动画
+                    createFlowers();
+                    createFloatingHearts();
+                    
+                    // 逐个显示祝福文字
+                    const wishTexts = wishesContainer.querySelectorAll('p');
+                    wishTexts.forEach((text, index) => {
+                        setTimeout(() => {
+                            text.classList.add('active');
+                        }, 300 * (index + 1));
+                    });
+                } else {
+                    this.textContent = '点击查看特别祝福';
+                    // 隐藏祝福文字
+                    const wishTexts = wishesContainer.querySelectorAll('p');
+                    wishTexts.forEach(text => {
+                        text.classList.remove('active');
+                    });
+                }
+            });
+        }
+        
+        // 页面加载时初始化所有功能
+        window.addEventListener('load', function() {
+            createFlowers();
+            createFloatingHearts();
+            setupPhotoSlider();
+            setupMusicControl();
+            setupWishButton();
+            setupStageTransition();
+            
+            // 初始化滚动显示
+            handleScrollReveal();
+            
+            // 为消息添加鼠标悬停效果
+            const messageParagraphs = document.querySelectorAll('.message p');
+            messageParagraphs.forEach(p => {
+                p.addEventListener('mouseenter', function() {
+                    this.classList.add('animate__animated', 'animate__pulse');
+                });
+                p.addEventListener('mouseleave', function() {
+                    this.classList.remove('animate__animated', 'animate__pulse');
+                });
+            });
+        });
+        
+        // 监听滚动事件
+        window.addEventListener('scroll', handleScrollReveal);
+    </script>
+</body>
+</html>
